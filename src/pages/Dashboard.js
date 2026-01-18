@@ -18,7 +18,7 @@ function Dashboard() {
   const fetchSlots = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/slots?date=${date}`,
+        `https://canara-gym-backend.onrender.com/api/slots?date=${date}`,
         { headers: getAuthHeader() }
       );
       setSlots(res.data);
@@ -38,7 +38,7 @@ function Dashboard() {
   const handleBook = async (slotId) => {
     try {
       await axios.post(
-        "http://localhost:5000/api/bookings",
+        "https://canara-gym-backend.onrender.com/api/bookings",
         { slotId, date },
         { headers: getAuthHeader() }
       );
