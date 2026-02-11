@@ -3,7 +3,8 @@ import axios from "axios";
 import SlotCard from "../components/SlotCard";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../App.css";
-
+const API = process.env.REACT_APP_API_URL;
+//added the above single line.........................................................
 function Dashboard() {
   const [date, setDate] = useState("");
   const [slots, setSlots] = useState([]);
@@ -19,7 +20,10 @@ function Dashboard() {
     if (!date) return;
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/slots?date=${date}`,
+        `${API}/api/slots?date=${date}`,
+
+        // `http://localhost:5000/api/slots?date=${date}`, replaced to above single line............
+
         { headers: getAuthHeader() }
       );
       console.log("slots received:",res.data);
@@ -44,7 +48,9 @@ function Dashboard() {
   const handleBook = async (slotId) => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/bookings",
+        // "http://localhost:5000/api/bookings",replaced the below code ....................
+        `${API}/api/bookings`,
+
         { slotId, date },
         { headers: getAuthHeader() }
       );
@@ -64,7 +70,7 @@ function Dashboard() {
   const handleCancel = async (slotId) => {
     try {
       await axios.delete(
-        "http://localhost:5000/api/bookings",
+        `${API}/api/bookings`,
         {
           headers: getAuthHeader(),
           data: { slotId, date },
