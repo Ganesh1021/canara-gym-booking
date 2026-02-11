@@ -15,7 +15,7 @@ function Navbar() {
     <nav style={styles.nav}>
       <h3 style={styles.title}>Canara Gym</h3>
       <div>
-        <Link to="/" style={styles.link}>Home</Link>
+        <Link to="/home" style={styles.link}>Home</Link>
         {!token ? (
           <>
             <Link to="/login" style={styles.link}>Login</Link>
@@ -58,37 +58,3 @@ export default Navbar;
 
 
 
-// import React, { useContext } from "react";
-// import { Link, useNavigate } from "react-router-dom";
-// import { AuthContext } from "../utils/AuthContext";
-
-// function Navbar() {
-//   const { user, logout } = useContext(AuthContext);
-//   const navigate = useNavigate();
-
-//   const handleLogout = () => {
-//     logout();
-//     navigate("/");
-//   };
-
-//   return (
-//     <nav className="navbar">
-//       <Link to="/">🏋️ Gymify</Link>
-//       <div>
-//         {!user ? (
-//           <>
-//             <Link to="/login">Login</Link>
-//             <Link to="/signup">Sign Up</Link>
-//           </>
-//         ) : (
-//           <>
-//             <Link to="/dashboard">Dashboard</Link>
-//             <button onClick={handleLogout}>Logout</button>
-//           </>
-//         )}
-//       </div>
-//     </nav>
-//   );
-// }
-
-// export default Navbar;

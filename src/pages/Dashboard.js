@@ -8,74 +8,98 @@ function Dashboard() {
   const [date, setDate] = useState("");
   const [slots, setSlots] = useState([]);
 
-  // ✅ Helper to get token properly
+  // Helper: get auth token headers
   const getAuthHeader = () => {
     const token = localStorage.getItem("token");
     return { Authorization: `Bearer ${token}` };
   };
 
-  // 📦 Fetch available slots for the selected date
+  // Fetch slots + user booking info
   const fetchSlots = async () => {
+    if (!date) return;
     try {
       const res = await axios.get(
-        `https://canara-gym-backend.onrender.com/api/slots?date=${date}`,
+        `http://localhost:5000/api/slots?date=${date}`,
         { headers: getAuthHeader() }
       );
+      console.log("slots received:",res.data);
+      
       setSlots(res.data);
+      // console.log("slots:",slots);
+      //(5) [{…}, {…}, {…}, {…}, {…}]0: {_id: '696db8a348fb9406d1066a1d', time: '06:00 AM - 07:00 AM', date: '2026-01-26', bookedCount: 2, __v: 0}1: {_id: '696db8a348fb9406d1066a20', time: '06:00 PM - 07:00 PM', date: '2026-01-26', bookedCount: 2, __v: 0}2: {_id: '696db8a348fb9406d1066a21', time: '07:00 PM - 08:00 PM', date: '2026-01-26', bookedCount: 1, __v: 0}3: {_id: '696db8a348fb9406d1066a1e', time: '07:00 AM - 08:00 AM', date: '2026-01-26', bookedCount: 2, __v: 0}4: {_id: '696db8a348fb9406d1066a1f', time: '05:00 PM - 06:00 PM', date: '2026-01-26', bookedCount: 1, __v: 0}length: 5[[Prototype]]: Array(0)
+
     } catch (err) {
       console.error("Error fetching slots:", err);
       if (err.response?.status === 401) {
-        alert("⚠️ Session expired or unauthorized. Please log in again.");
+        alert("Session expired. Please log in again.");
         localStorage.clear();
         window.location.href = "/login";
       } else {
-        alert("Failed to load slots. Please try again later.");
+        alert("Failed to load slots. Try again later.");
       }
     }
   };
 
-  // 🏋️ Book a slot
+  // Book a slot
   const handleBook = async (slotId) => {
     try {
-      await axios.post(
-        "https://canara-gym-backend.onrender.com/api/bookings",
+      const res = await axios.post(
+        "http://localhost:5000/api/bookings",
         { slotId, date },
         { headers: getAuthHeader() }
       );
-      alert("✅ Slot booked successfully!");
-      fetchSlots();
-    } catch (err) {
-      console.error("Error booking slot:", err);
-      if (err.response?.status === 401) {
-        alert("⚠️ Please log in again to continue.");
-        localStorage.clear();
-        window.location.href = "/login";
+      if (res.data.success) {
+        alert("Slot booked successfully!");
       } else {
-        alert("Booking failed. Please try again.");
+        alert(res.data.message || "Booking failed.");
       }
+    } catch (error) {
+      alert(error.response?.data?.message || "Booking failed.");
+    } finally {
+      fetchSlots(); // refresh slots & booking status
     }
   };
 
-  // 🔁 Fetch slots whenever date changes
+  // Cancel booking
+  const handleCancel = async (slotId) => {
+    try {
+      await axios.delete(
+        "http://localhost:5000/api/bookings",
+        {
+          headers: getAuthHeader(),
+          data: { slotId, date },
+        }
+      );
+      alert("Booking cancelled successfully!");
+    } catch (err) {
+      alert("Failed to cancel booking. Please try again.");
+    } finally {
+      fetchSlots();
+    }
+  };
+
+  // Fetch slots when date changes
   useEffect(() => {
-    if (date) fetchSlots();
+    fetchSlots();
   }, [date]);
 
-  // 🧭 Redirect if not logged in
+  // Redirect if not logged in
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!localStorage.getItem("token")) {
       alert("Please log in first!");
       window.location.href = "/login";
     }
   }, []);
 
-  // ✅ Calculate today’s date for min attribute
-const today = new Date();
-const tomorrow = new Date(today);
-tomorrow.setDate(today.getDate() + 1);
+  useEffect(() => {
+    console.log("Slots updated:", slots);
+  }, [slots]);
 
-const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+  // Tomorrow date for datepicker min attr
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
   return (
     <div className="container mt-5">
@@ -83,7 +107,6 @@ const tomorrowStr = tomorrow.toISOString().split("T")[0];
         🏋️‍♂️ Book Your Gym Slot
       </h2>
 
-      {/* Date Picker Section */}
       <div className="text-center mb-4">
         <label htmlFor="datePicker" className="form-label fw-semibold">
           Select Date:
@@ -94,11 +117,10 @@ const tomorrowStr = tomorrow.toISOString().split("T")[0];
           className="form-control w-auto d-inline-block mx-2"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          min={tomorrowStr} // ✅ disables past dates
+          min={tomorrowStr}
         />
       </div>
 
-      {/* Slots Display Section */}
       {date ? (
         <div className="row">
           {slots.length > 0 ? (
@@ -107,7 +129,20 @@ const tomorrowStr = tomorrow.toISOString().split("T")[0];
                 key={slot._id}
                 className="col-md-4 col-sm-6 mb-4 d-flex justify-content-center"
               >
-                <SlotCard slot={slot} onBook={() => handleBook(slot._id)} />
+                {/* <SlotCard
+                  slot={slot}
+                  userHasBooked={slot.userHasBooked}
+                  onBook={() => handleBook(slot._id)}
+                  onCancel={() => handleCancel(slot._id)}
+                /> */}
+
+                <SlotCard
+                  slot={slot}
+                  userHasBooked={slot.userHasBooked}
+                  onBook={() => handleBook(slot._id)}
+                  onCancel={() => handleCancel(slot._id)}
+                />
+
               </div>
             ))
           ) : (
